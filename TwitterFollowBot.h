@@ -1,7 +1,7 @@
 
 #include "libtwitcurl/twitcurl.h"
 
-#include "json.h"
+#include "json.h" 
 
 #include <iostream>
 #include <cstdlib>
@@ -9,7 +9,7 @@
 #include <vector>
 #include <queue>
 
-#include <ctime>
+#include <ctime> 
 #include <chrono>
 #include <thread>
 
@@ -18,74 +18,55 @@
 //-----------------------------------------------------------------------------------
 
 struct Account { 
-
-	Account(std::string id_in)
-		: id(id_in) {}
+	Account(std::string id_in) //creates Account with id
+		: id(id_in) {} 
 
 	std::string id;
-	std::string name;
+	std::string name; //twitter handle
 	
-	bool following;
-	std::time_t follow;
+	bool following; //true when they follow me
+	std::time_t follow; //timestamp of when they followed me (unused)
 	
-	bool follower;
-	std::time_t remove;
+	bool follower; //true when I follow them 
+	std::time_t remove; //timestamp of when I followed them (unused)
 };
-
-//UNUSED
-/*
-struct AccountComp { //sort so that oldest is on top
-	bool operator()(Account & lhs, Account & rhs){
-		return lhs.remove > rhs.remove;
-	}
-};
-*/
 
 class TwitterFollowBot {
 public:
 	TwitterFollowBot(std::string CK, std::string CS, std::string AT, std::string ATS);
-	void loop();
-	void end();
+	void loop(std::string & user); //follow bot loop
+	void rate(); //checks the rate of usage
+	void tweet(std::string & tweet); //sends a tweet
+	
+	//void end();
 
 private:
-	void get_accounts_to_follow();
-	void add_new_follows();
+	void get_accounts_to_follow(std::string & user); //creates to_follow array
+	void add_new_follows(); //follow several people
 	
-	void sift();
-	void manage();
-	void move(int i);
-	void delay();
+	void sift(); //remove several people
+	void delay(); //print time of next update
 	
-	bool is_follower(Account & a);
-	bool is_friend(Account & a);
+	bool is_follower(Account & a); //checks if user follows me
+	bool is_friend(Account & a); //checks if user has relation to me
 	
-	void unfollow(Account & a);
-	void follow(Account & a);
-	void tweet(std::string & tweet);
+	void unfollow(Account & a); //unfollows a user
+	void follow(Account & a); //follows a user
+	
 	
 	twitCurl acct; //my account
 	
 	std::queue<Account> to_follow; //accounts to follow
 	std::queue<Account> just_followed; //accounts just followed
 	
-	//UNUSED
-	//std::priority_queue<Account, std::vector<Account>, AccountComp> to_unfollow; //to be unfollowed
+	const int FOLLOW_LIMIT = 2000;	//up to 5000 for team follow back
+	const int ADD_LIMIT = 6; 		//people added per cycle
+	const int REMOVE_LIMIT = 5;		//people removed per cycle
+	const int TIME = 16; 			//must be >= 15
+	const int REMOVE_TIME = 18;		//hours spent following before remove
 	
-	std::string ACCOUNTS[8] = { //accounts Skylar, Cassie, and Hope retweet
-		"shutupmikeginn", //TODO
-		"DanMentos", //TODO
-		"jonnysun", //TODO
-		"KeetPotato", 
-		"dubstep4dads", 
-		"BuckyIsotope", //TODO
-		"Fred_delicious", //TODO
-		"pixelatedboat" //TODO
-	};
-	
-	const int FOLLOW_LIMIT = 2000;
-	const int ADD_LIMIT = 5;
-	const int REMOVE_LIMIT = 3;
-	const int TIME = 16;
+	int new_follows = 0; //counts users that have followed back at end of cycle
+	int users_done = 0; //counts users gone through cycle
 };
 
 //-----------------------------------------------------------------------------------
@@ -104,21 +85,21 @@ TwitterFollowBot::TwitterFollowBot(
 	
 	this->acct.oAuthAccessToken();
 	
-	std::cout << "Logged In\n";
+	std::cout << "Logged In" << std::endl;
 
 }
 
-void TwitterFollowBot::loop(){ //---------------------------------------------------- loop
+void TwitterFollowBot::loop(std::string & user){ //---------------------------------- loop
 	
-	this->get_accounts_to_follow(); //initial setup
+	this->get_accounts_to_follow(user); //initial setup
 	
 	//while I havent run into account limit && queue != empty
 	while(!to_follow.empty()){ 
 	
 		//output
-		std::cout << "List\tFollow\n";
+		std::cout << "List\tFollow" << std::endl;
 		std::cout << to_follow.size() << "\t" 
-			<< just_followed.size() << "\n";
+			<< just_followed.size() << std::endl;
 		
 		//sift for accounts followed hours ago
 		this->sift();
@@ -129,46 +110,49 @@ void TwitterFollowBot::loop(){ //-----------------------------------------------
 		//follow 3 accounts
 		this->add_new_follows();
 		
+		if(this->users_done > 0)
+			std::cout << "Success Rate: " 
+				<< (double)(new_follows/users_done) << std::endl;
+		
 		//wait 16 minutes
 		this->delay();
 	}
 }
 
 void TwitterFollowBot::delay(){
-	std::cout << "============================================\n";
+	std::cout << "============================================" << std::endl;
 	const std::time_t future = std::time(nullptr)+this->TIME*60;
 	std::cout << "          " << std::asctime(std::localtime(&future));
-	std::cout << "============================================\n";
+	std::cout << "============================================" << std::endl;
 	std::this_thread::sleep_for(std::chrono::minutes(TIME));
-	/*for(int i = 0; i < 16*4; ++i){
-		std::cout << "=";
-		std::this_thread::sleep_for(std::chrono::seconds(15));
-	}
-	std::cout << "\n";*/
 }
 
 
-void TwitterFollowBot::get_accounts_to_follow(){ //---------------------------------- get_acct_to_follow
-	
+void TwitterFollowBot::get_accounts_to_follow(std::string & user){ //---------------- get_acct_to_follow
 	std::string response;
 	std::string nextCursor("");
-	std::string searchUser(ACCOUNTS[7]);
-
+	std::string searchUser(user);
+	//if request works
 	if(acct.followersIdsGet(nextCursor, searchUser)){
+		//get the last response
 		this->acct.getLastWebResponse(response);
+		//use JSON to make a list of followers
 		Followers f = Followers(response, this->FOLLOW_LIMIT);
-		
+		//add them all to to_follow
 		for(unsigned i = 0; i < f.size(); ++i){
 			this->to_follow.push(f[i]);
 		}
 	}
 	else exit(0);
+	
+	std::cout << "Added " << to_follow.size() 
+		<< " accounts from user " << user << std::endl;
 }
 
 
 void TwitterFollowBot::add_new_follows(){ //----------------------------------------- add_new_follows
-	//add three more people
-	for(int added = 0; added < this->ADD_LIMIT;){
+	//add more people
+	for(int added = 0; added < this->ADD_LIMIT && !to_follow.empty();){ 
 		//if they have a relation to me
 		if(is_friend(to_follow.front()))
 			to_follow.pop();
@@ -189,50 +173,18 @@ void TwitterFollowBot::add_new_follows(){ //------------------------------------
 }
 
 void TwitterFollowBot::sift(){ //---------------------------------------------------- sift
-	unsigned comp = this->ADD_LIMIT * 60/this->TIME * 18;
-	if(just_followed.size() > comp){
+	//after a certian number of follows and time
+	unsigned comp = this->ADD_LIMIT * 60/this->TIME * this->REMOVE_TIME;
+	//if it has exceeded that limit
+	//TODO this has to continue sifting after to_follow = 0;
+	if(just_followed.size() > comp || to_follow.empty()){ 
 		for(int i = 0; i < this->REMOVE_LIMIT; ++i){
 			this->unfollow(just_followed.front());
 			just_followed.pop();
 		}
 	}
-	/*
-	int checked = 0;
-	//go through just_followed
-	for(unsigned i = 0; i < just_followed.size(); ++i){
-		//if they were followed a while ago (3 hours)
-		if((double)((std::time(nullptr) - just_followed[i].follow) / (60*60*3)) >= 1){
-			this->unfollow(just_followed[i]);
-		}
-		//if they follow me back
-		else if(checked < 6 && is_follower(just_followed[i])){
-			++checked;
-			move(i);
-		}
-	}
-	*/
-}
-/*
-//UNUSED
-void TwitterFollowBot::move(int i){ //----------------------------------------------- move
-	//set a remove time
-	just_followed[i].remove = std::time(nullptr);
-	//add them to to_unfollow
-	to_unfollow.push(just_followed[i]);
-	//remove
-	just_followed.erase(just_followed.begin() + i);
 }
 
-//UNUSED
-void TwitterFollowBot::manage(){ //-------------------------------------------------- manage
-	for(int i = 0; !to_unfollow.empty() && i < this->ADD_LIMIT; ++i){
-		Account & a = const_cast<Account&>(to_unfollow.top());
-		this->unfollow(a);
-		to_unfollow.pop();
-	}
-}
-
-//UNUSED
 bool TwitterFollowBot::is_follower(Account & a){ //---------------------------------- is_follower
 	std::string response;
 	
@@ -248,12 +200,12 @@ bool TwitterFollowBot::is_follower(Account & a){ //-----------------------------
 	
 	std::cout << std::boolalpha 
 		<< "Follow Status (" << a.name << "): " 
-		<< a.follower << "\n";
+		<< a.follower << std::endl;
 	
 	return a.follower;
 
 }
-*/
+
 bool TwitterFollowBot::is_friend(Account & a){ //------------------------------------ is_friend
 	std::string response;
 	
@@ -267,25 +219,41 @@ bool TwitterFollowBot::is_friend(Account & a){ //-------------------------------
 	}
 	else exit(0);
 	
-	std::cout << std::boolalpha 
-		<< "Friend Status (" << a.name << "): " 
-		<< (a.following || a.follower) << "\n";
+//	std::cout << std::boolalpha 
+//		<< "Friend Status (" << a.name << "): " 
+//		<< (a.following || a.follower) << "\n";
 	
 	return a.following || a.follower;
 }
 
 void TwitterFollowBot::unfollow(Account & a){ //------------------------------------- unfollow
-	std::cout << "Unfollowed: " << a.name << "\n";
+	std::cout << "Unfollowed: " << a.name << std::endl;
+	this->users_done += 1;
+	if(this->is_follower(a))
+		this->new_follows += 1;
 	this->acct.friendshipDestroy(a.id, true);
 }
 
 void TwitterFollowBot::follow(Account & a){ //--------------------------------------- follow
-	std::cout << "Followed: " << a.name << "\n";
+	std::cout << "Followed: " << a.name << std::endl;
 	this->acct.friendshipCreate(a.id, true);
 }
 
 void TwitterFollowBot::tweet(std::string & tweet){ //-------------------------------- tweet
+	if(tweet.length() > 140){
+		std::cout << "Error: Tweet is " 
+			<< tweet.length() << " characters." << std::endl;
+		return;
+	}
+	std::cout << "Tweeted: " << tweet << std::endl;
 	this->acct.statusUpdate(tweet);
 }
 
+void TwitterFollowBot::rate(){ //---------------------------------------------------- rate
+	std::string response;
+	if(this->acct.accountRateLimitGet()){
+		this->acct.getLastWebResponse(response);
+		std::cout << response << "\n";
+	}
+}
 
