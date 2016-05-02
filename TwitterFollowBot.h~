@@ -220,14 +220,13 @@ bool TwitterFollowBot::is_friend(Account & a){ //-------------------------------
 }
 
 void TwitterFollowBot::unfollow(Account & a){ //------------------------------------- unfollow
+	std::cout << "Unfollowed: " << a.name;
 	this->users_done += 1;
 	if(this->is_follower(a)){
 		this->new_follows += 1;
-		std::cout << "Unfollowed [X]: " << a.name << std::endl;
+		std::cout << " with follow.";
 	}
-	else
-		std::cout << "Unfollowed [ ]: " << a.name << std::endl;
-	
+	std::cout << std::endl;
 	this->acct.friendshipDestroy(a.id, true);
 }
 
