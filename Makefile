@@ -6,7 +6,7 @@ clean :
 	rm -vf t *~
 
 git :
-	rm -vf t *~
+	rm *~
 	git add *
 	git commit -m "$(note)"
 	git push
