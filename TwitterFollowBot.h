@@ -59,7 +59,7 @@ private:
 	std::queue<Account> to_follow; //accounts to follow
 	std::queue<Account> just_followed; //accounts just followed
 	
-	const int FOLLOW_LIMIT = 2000;	//up to 5000 for team follow back
+	const int FOLLOW_LIMIT = 500;	//up to 5000 for team follow back
 	const int ADD_LIMIT = 6; 		//people added per cycle
 	const int REMOVE_LIMIT = 5;		//people removed per cycle
 	const int TIME = 16; 			//must be >= 15
