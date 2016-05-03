@@ -8,5 +8,6 @@ clean :
 git :
 	rm *~
 	git add *
+	git rm *~
 	git commit -m "$(note)"
 	git push
