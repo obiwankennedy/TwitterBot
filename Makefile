@@ -4,3 +4,9 @@ main : twitter.cpp TwitterFollowBot.h
 
 clean :
 	rm -vf t *~
+
+git :
+	rm -vf t *~
+	git add *
+	git commit -m "$(note)"
+	git push

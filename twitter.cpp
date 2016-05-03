@@ -69,13 +69,16 @@ void setup(int argc, char *argv[], TwitterFollowBot & t){
 			case 't': 
 				str = (std::string)optarg;
 				t.tweet(str);
+				return;
 				break;
 			case 'r':
 				t.rate();
+				return;
 				break;
 			case 'l':
 				str = (std::string)optarg;
-				t.loop(str); //make loop take a string with account username
+				t.loop(str); 
+				return;
 				break;
 		}
 	} 
