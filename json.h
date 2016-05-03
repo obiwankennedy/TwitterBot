@@ -7,10 +7,10 @@
 //									FOLLOW LIST
 //-----------------------------------------------------------------------------------
 
-class Followers {
+class UserList {
 public:
-
-	Followers(std::string & data_in, int limit);
+	UserList(std::string & data_in, int limit);
+	UserList(std::string & data_in);
 	std::string & operator[](int i);
 	std::vector<std::string> & list();
 	unsigned size();
@@ -26,14 +26,14 @@ private:
 	std::string previous_cursor_str = "0";
 };
 
-Followers::Followers(std::string & data_in, int limit)
+UserList::UserList(std::string & data_in, int limit)
 	: data(data_in) { //------------------------------------------------------------- ctor
 	
 	size_t last = this->data.find('[') + 1;
 	size_t end = this->data.find(']');
 	
 	for(size_t next = this->data.find(',', last); 
-		limit > 0 && next < end && next != std::string::npos; 
+		limit > 0 && next < end && next != std::string::npos;
 		next = this->data.find(',', last)){
 
 		this->ids.push_back(this->data.substr(last, next - last));
@@ -42,15 +42,30 @@ Followers::Followers(std::string & data_in, int limit)
 	} 
 }
 
-std::string & Followers::operator[](int i){ //--------------------------------------- operator[]
+UserList::UserList(std::string & data_in)
+	: data(data_in) { //------------------------------------------------------------- ctor
+	
+	size_t last = this->data.find('[') + 1;
+	size_t end = this->data.find(']');
+	
+	for(size_t next = this->data.find(',', last); 
+		next < end && next != std::string::npos;
+		next = this->data.find(',', last)){
+
+		this->ids.push_back(this->data.substr(last, next - last));
+		last = next + 1;
+	} 
+}
+
+std::string & UserList::operator[](int i){ //--------------------------------------- operator[]
 	return ids[i];
 }
 
-std::vector<std::string> & Followers::list(){ //------------------------------------- list
+std::vector<std::string> & UserList::list(){ //------------------------------------- list
 	return this->ids;
 }
 
-unsigned Followers::size(){ //------------------------------------------------------- size
+unsigned UserList::size(){ //------------------------------------------------------- size
 	return ids.size();
 }
 

@@ -31,8 +31,10 @@ human sheep accounts
 
 static struct option longopts[] = {
 	{"tweet", required_argument, nullptr, 't'},
-	{"rate", no_argument, nullptr, 'r'},
-	{"loop", required_argument, nullptr, 'l'}, //make loop take an argument
+	{"usage", no_argument, nullptr, 'u'},
+	{"loop", required_argument, nullptr, 'l'},
+	{"record", no_argument, nullptr, 'r'},
+	{"clean", no_argument, nullptr, 'c'},
 	{nullptr, 0, nullptr, 0}
 };
 
@@ -64,22 +66,20 @@ void setup(int argc, char *argv[], TwitterFollowBot & t){
 	std::string str;
 	int idx = 0;
 	char c;
-	while ((c = getopt_long(argc, argv, "t:rl:", longopts, &idx)) != -1){
+	while ((c = getopt_long(argc, argv, "t:ul:rc", longopts, &idx)) != -1){
 		switch(c) {
 			case 't': 
 				str = (std::string)optarg;
-				t.tweet(str);
-				return;
-				break;
-			case 'r':
-				t.rate();
-				return;
-				break;
+				t.tweet(str); return; break;
+			case 'u':
+				t.usage(); return; break;
 			case 'l':
 				str = (std::string)optarg;
-				t.loop(str); 
-				return;
-				break;
+				t.loop(str); return; break;
+			case 'r':
+				t.record(); return; break;
+			case 'c':
+				t.clean(); return; break;
 		}
 	} 
 }
