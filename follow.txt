@@ -1,5 +1,1 @@
-Logged In
-Accounts To Follow: 700
-230185324
 {"relationship":{"source":{"id":816329401,"id_str":"816329401","screen_name":"PeterJFlan","following":true,"followed_by":true,"following_received":false,"following_requested":false,"notifications_enabled":false,"can_dm":true,"blocking":false,"blocked_by":false,"muting":false,"want_retweets":true,"all_replies":false,"marked_spam":false},"target":{"id":230185324,"id_str":"230185324","screen_name":"dumbleders","following":true,"followed_by":true,"following_received":false,"following_requested":false}}}
-0
