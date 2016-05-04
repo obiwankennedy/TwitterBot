@@ -174,7 +174,7 @@ void TwitterFollowBot::add_follows(){ //----------------------------------------
 
 void TwitterFollowBot::remove_follows(){ //------------------------------------------ remove_follows
 	//after a certian number of follows and time
-	unsigned comp = this->ADD_LIMIT * 60/this->TIME * this->REMOVE_TIME;
+	unsigned comp = 100; //this->ADD_LIMIT * 60/this->TIME * this->REMOVE_TIME;
 	//if it has exceeded that limit
 
 	if(just_followed.size() > comp || to_follow.empty()){ 
@@ -198,7 +198,7 @@ bool TwitterFollowBot::is_follower(Account & a){ //-----------------------------
 	}
 	else exit(0);
 	
-	return a.follower;
+	return a.following;
 }
 
 bool TwitterFollowBot::is_friend(Account & a){ //------------------------------------ is_friend
@@ -284,8 +284,7 @@ void TwitterFollowBot::record(){ //---------------------------- record
 	
 	file.close();
 
-	std::cout << "Recorded " << size
-		<< " accounts to " << filename << std::endl;
+	std::cout << "Recorded: " << size << std::endl;
 }
 
 
