@@ -61,7 +61,7 @@ private:
 	const int FOLLOW_LIMIT = 2000;	//up to 5000 for team follow back
 	const int ADD_LIMIT = 3; 		//people added per cycle
 	const int REMOVE_LIMIT = 3;		//people removed per cycle
-	const int TIME = 11; 			//minutes spent between cycle runs
+	const int TIME = 16; 			//minutes spent between cycle runs
 	const int REMOVE_TIME = 14;		//hours spent following before remove
 	
 	int new_follows = 0; //counts users that have followed back at end of cycle
