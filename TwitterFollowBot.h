@@ -198,7 +198,7 @@ bool TwitterFollowBot::is_follower(Account & a){ //-----------------------------
 	}
 	else exit(0);
 	
-	return a.following;
+	return a.follower;
 }
 
 bool TwitterFollowBot::is_friend(Account & a){ //------------------------------------ is_friend
