@@ -50,10 +50,9 @@ private:
 
 	//removing users
 	const int REMOVE_LIMIT = 3;		//people removed per cycle
-<<<<<<< HEAD
-=======
+
+
 	const int TIME = 16; 			//minutes spent between cycle runs
->>>>>>> c566d6359b0037912e507992694cb9891d238961
 	const int REMOVE_TIME = 14;		//hours spent following before remove
 	const int MAX_FOLLOWS = 100;	//maximum users to follow in place of REMOVE_TIME
 	
@@ -165,85 +164,7 @@ void TwitterFollowBot::remove_follows(){ //-------------------------------------
 	}
 }
 
-<<<<<<< HEAD
 void TwitterFollowBot::record(){ //-------------------------------------------------- record
-=======
-bool TwitterFollowBot::is_follower(Account & a){ //---------------------------------- is_follower
-	std::string response;
-	
-	if(this->acct.friendshipShow(a.id,true)){
-		this->acct.getLastWebResponse(response);
-		User u = User(response);
-		
-		a.name = u.get_friendship().name;
-		a.following = u.get_friendship().following;
-		a.follower = u.get_friendship().follower;
-	}
-	else exit(0);
-	
-	return a.follower;
-}
-
-bool TwitterFollowBot::is_friend(Account & a){ //------------------------------------ is_friend
-	std::string response;
-	
-	if(this->acct.friendshipShow(a.id,true)){
-		this->acct.getLastWebResponse(response);
-		User u = User(response);
-		
-		a.name = u.get_friendship().name;
-		a.following = u.get_friendship().following;
-		a.follower = u.get_friendship().follower;
-	}
-	else exit(0);
-	
-	if(a.following || a.follower)
-		std::cout << "Passed: " << a.name << std::endl;
-	
-	return a.following || a.follower;
-}
-
-void TwitterFollowBot::unfollow(Account & a){ //------------------------------------- unfollow
-	this->users_done += 1;
-	if(this->is_follower(a)){
-		this->new_follows += 1;
-		std::cout << "Unfollowed [X]: " << a.name << std::endl;
-	}
-	else
-		std::cout << "Unfollowed [ ]: " << a.name << std::endl;
-	
-	this->acct.friendshipDestroy(a.id, true);
-}
-
-void TwitterFollowBot::follow(Account & a){ //--------------------------------------- follow
-	std::cout << "Followed: " << a.name << std::endl;
-	this->acct.friendshipCreate(a.id, true);
-}
-
-//-----------------------------------------------------------------------------------
-//							OTHER COMMAND LINE FUNCTIONS
-//-----------------------------------------------------------------------------------
-
-void TwitterFollowBot::tweet(std::string & tweet){ //-------------------------------- tweet
-	if(tweet.length() > 140){
-		std::cout << "Error: Tweet is " 
-			<< tweet.length() << " characters." << std::endl;
-		return;
-	}
-	std::cout << "Tweeted: " << tweet << std::endl;
-	this->acct.statusUpdate(tweet);
-}
-
-void TwitterFollowBot::usage(){ //--------------------------------------------------- rate
-	std::string response;
-	if(this->acct.accountRateLimitGet()){
-		this->acct.getLastWebResponse(response);
-		std::cout << response << "\n";
-	}
-}
-
-void TwitterFollowBot::record(){ //---------------------------- record
->>>>>>> c566d6359b0037912e507992694cb9891d238961
 	std::string response;
 	std::string nextCursor("");
 	std::string searchUser("PeterJFlan");
