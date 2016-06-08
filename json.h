@@ -45,6 +45,8 @@ UserList::UserList(std::string & data_in, int limit)
 UserList::UserList(std::string & data_in)
 	: data(data_in) { //------------------------------------------------------------- ctor
 	
+	std::cout << this->data << std::endl;
+	
 	size_t last = this->data.find('[') + 1;
 	size_t end = this->data.find(']');
 	

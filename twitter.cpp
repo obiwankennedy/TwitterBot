@@ -11,7 +11,8 @@ accounts Skylar, Cassie, and Hope retweet
 
 human sheep accounts
 	fuckeveryword
-
+	teamfollowback
+	
 -----------------------------------------------------------------------------------*/
 
 
@@ -22,6 +23,7 @@ human sheep accounts
 #include <iostream>
 #include <getopt.h>
 
+#include "Twitter.h"
 #include "TwitterFollowBot.h"
 #include "../twitter_credentials.h"
 
@@ -38,7 +40,7 @@ static struct option longopts[] = {
 	{nullptr, 0, nullptr, 0}
 };
 
-void setup(int argc, char *argv[], TwitterFollowBot & t);
+void setup(int argc, char *argv[], Twitter & t, TwitterFollowBot & bot);
 
 //-----------------------------------------------------------------------------------
 //										MAIN
@@ -48,12 +50,14 @@ int main(int argc, char *argv[]){
 
 	std::ios_base::sync_with_stdio(false);
 
-	TwitterFollowBot t = TwitterFollowBot(CONSUMER_KEY, 
-										  CONSUMER_SECRET, 
-										  ACCESS_TOKEN, 
-										  ACCESS_TOKEN_SECRET);
+	Twitter t = Twitter(CONSUMER_KEY, 
+						CONSUMER_SECRET, 
+						ACCESS_TOKEN, 
+						ACCESS_TOKEN_SECRET);
+						
+	TwitterFollowBot bot = TwitterFollowBot(t);
 
-	setup(argc,argv, t);
+	setup(argc, argv, t, bot);
 
 	return 0;
 }
@@ -62,7 +66,7 @@ int main(int argc, char *argv[]){
 //									DEFENITIONS
 //-----------------------------------------------------------------------------------
 
-void setup(int argc, char *argv[], TwitterFollowBot & t){
+void setup(int argc, char *argv[], Twitter & t, TwitterFollowBot & bot){
 	std::string str;
 	int idx = 0;
 	char c;
@@ -75,11 +79,11 @@ void setup(int argc, char *argv[], TwitterFollowBot & t){
 				t.usage(); return; break;
 			case 'l':
 				str = (std::string)optarg;
-				t.loop(str); return; break;
-			case 'r':
-				t.record(); return; break;
+				bot.loop(str); return; break;
+			case 'r': 
+				bot.record(); return; break;
 			case 'c':
-				t.clean(); return; break;
+				bot.clean(); return; break;
 		}
 	} 
 }
