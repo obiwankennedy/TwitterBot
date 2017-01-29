@@ -82,5 +82,6 @@ private:
     QList<CommandDice*> m_cmdToRun;
     QList<CommandDice*> m_results;
     bool m_init;
+    bool m_init2;
 };
 #endif
