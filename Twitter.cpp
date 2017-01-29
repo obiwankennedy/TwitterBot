@@ -2,17 +2,17 @@
 /*-----------------------------------------------------------------------------------
 
 accounts Skylar, Cassie, and Hope retweet
-	shutupmikeginn 
-	DanMentos
-	jonnysun
-	BuckyIsotope
-	Fred_delicious 
-	pixelatedboat //NEXT
+    shutupmikeginn
+    DanMentos
+    jonnysun
+    BuckyIsotope
+    Fred_delicious
+    pixelatedboat //NEXT
 
 human sheep accounts
-	fuckeveryword
-	teamfollowback
-	
+    fuckeveryword
+    teamfollowback
+
 -----------------------------------------------------------------------------------*/
 
 
@@ -24,67 +24,160 @@ human sheep accounts
 #include <getopt.h>
 
 #include "Twitter.h"
-#include "TwitterFollowBot.h"
-#include "../twitter_credentials.h"
+#include "TwitterBot.h"
 
-//-----------------------------------------------------------------------------------
-//									DECLARATIONS
-//-----------------------------------------------------------------------------------
+#include <QDebug>
 
-static struct option longopts[] = {
-	{"tweet", required_argument, nullptr, 't'},
-	{"usage", no_argument, nullptr, 'u'},
-	{"loop", required_argument, nullptr, 'l'},
-	{"record", no_argument, nullptr, 'r'},
-	{"clean", no_argument, nullptr, 'c'},
-	{nullptr, 0, nullptr, 0}
-};
 
-void setup(int argc, char *argv[], Twitter & t, TwitterFollowBot & bot);
 
-//-----------------------------------------------------------------------------------
-//										MAIN
-//-----------------------------------------------------------------------------------
+Twitter::Twitter(
+        std::string CK, std::string CS,
+        std::string AT, std::string ATS,std::string userName,std::string passwd)
+{
+    char tmpBuf[1024];
+    std::string replyMsg;
+    std::string tmpStr, tmpStr2;
 
-int main(int argc, char *argv[]){
+    this->m_acct.setTwitterUsername(userName);
+    this->m_acct.setTwitterPassword(passwd);
+    this->m_acct.getOAuth().setConsumerKey(CK);
+    this->m_acct.getOAuth().setConsumerSecret(CS);
 
-	std::ios_base::sync_with_stdio(false);
+  //  this->acct.getOAuth().setOAuthTokenKey(AT);
+  //  this->acct.getOAuth().setOAuthTokenSecret(ATS);
 
-	Twitter t = Twitter(CONSUMER_KEY, 
-						CONSUMER_SECRET, 
-						ACCESS_TOKEN, 
-						ACCESS_TOKEN_SECRET);
-						
-	TwitterFollowBot bot = TwitterFollowBot(t);
+    std::string myOAuthAccessTokenKey("");
+    std::string myOAuthAccessTokenSecret("");
+    std::ifstream oAuthTokenKeyIn;
+    std::ifstream oAuthTokenSecretIn;
 
-	setup(argc, argv, t, bot);
+    oAuthTokenKeyIn.open( "twitterClient_token_key.txt" );
+    oAuthTokenSecretIn.open( "twitterClient_token_secret.txt" );
 
-	return 0;
+    memset( tmpBuf, 0, 1024 );
+    oAuthTokenKeyIn >> tmpBuf;
+    myOAuthAccessTokenKey = tmpBuf;
+
+    memset( tmpBuf, 0, 1024 );
+    oAuthTokenSecretIn >> tmpBuf;
+    myOAuthAccessTokenSecret = tmpBuf;
+
+    oAuthTokenKeyIn.close();
+    oAuthTokenSecretIn.close();
+    if( myOAuthAccessTokenKey.size() && myOAuthAccessTokenSecret.size() )
+    {
+        // If we already have these keys, then no need to go through auth again
+        //printf( "\nUsing:\nKey: %s\nSecret: %s\n\n", myOAuthAccessTokenKey.c_str(), myOAuthAccessTokenSecret.c_str() );
+        qDebug() << "twitterClient:: twitCurl::accountVerifyCredGet web response:\n" << myOAuthAccessTokenKey.c_str() <<myOAuthAccessTokenSecret.c_str() ;
+
+
+        this->m_acct.getOAuth().setOAuthTokenKey( myOAuthAccessTokenKey );
+        this->m_acct.getOAuth().setOAuthTokenSecret( myOAuthAccessTokenSecret );
+    }
+    else
+    {//get url
+        std::string str;
+        this->m_acct.oAuthRequestToken(str);
+        m_urlString = str;
+
+       // bool b = this->acct.oAuthHandlePIN(m_urlString);
+        qDebug() << QString::fromStdString(m_urlString);
+        if( std::string::npos != tmpStr.find( "1" ) )
+        {
+            /* Ask user to visit twitter.com auth page and get PIN */
+            memset( tmpBuf, 0, 1024 );
+            qDebug() << "Please visit this link in web browser and authorize this application:\n" << m_urlString.c_str();
+            qDebug() << "Enter the PIN provided by twitter: ";
+            gets( tmpBuf );
+            tmpStr = tmpBuf;
+            this->m_acct.getOAuth().setOAuthPin( tmpStr );
+        }
+        else
+        {
+            /* Else, pass auth url to twitCurl and get it via twitCurl PIN handling */
+            this->m_acct.oAuthHandlePIN( m_urlString );
+        }
+        this->m_acct.oAuthAccessToken();
+        //this->acct.oAuthAccessToken();
+
+        std::ofstream oAuthTokenKeyOut;
+        std::ofstream oAuthTokenSecretOut;
+
+        this->m_acct.getOAuth().getOAuthTokenKey( myOAuthAccessTokenKey );
+        this->m_acct.getOAuth().getOAuthTokenSecret( myOAuthAccessTokenSecret );
+
+        oAuthTokenKeyOut.open( "twitterClient_token_key.txt" );
+        oAuthTokenSecretOut.open( "twitterClient_token_secret.txt" );
+
+        oAuthTokenKeyOut.clear();
+        oAuthTokenSecretOut.clear();
+
+        oAuthTokenKeyOut << myOAuthAccessTokenKey.c_str();
+        oAuthTokenSecretOut << myOAuthAccessTokenSecret.c_str();
+
+        oAuthTokenKeyOut.close();
+        oAuthTokenSecretOut.close();
+    }
+
+    if( this->m_acct.accountVerifyCredGet() )
+    {
+        this->m_acct.getLastWebResponse( replyMsg );
+        //qDebug() << "twitterClient:: twitCurl::accountVerifyCredGet web response:\n" << replyMsg.c_str();
+    }
+    else
+    {
+        this->m_acct.getLastCurlError( replyMsg );
+        //qDebug() << "twitterClient:: twitCurl::accountVerifyCredGet  error:\n" << replyMsg.c_str();
+    }
+
+   /* if( acct.search( "%23roll", "10" ) )
+    {
+        acct.getLastWebResponse( replyMsg );
+         qDebug() << "twitterClient:: twitCurl::search  reply:\n" << replyMsg.c_str();
+    }
+    else
+    {
+        acct.getLastCurlError( replyMsg );
+         qDebug() << "twitterClient:: twitCurl::search  error:\n" << replyMsg.c_str();
+    }*/
+    //this->acct.getOAuth().setOAuthPin("8461952");
 }
 
-//-----------------------------------------------------------------------------------
-//									DEFENITIONS
-//-----------------------------------------------------------------------------------
-
-void setup(int argc, char *argv[], Twitter & t, TwitterFollowBot & bot){
-	std::string str;
-	int idx = 0;
-	char c;
-	while ((c = getopt_long(argc, argv, "t:ul:rc", longopts, &idx)) != -1){
-		switch(c) {
-			case 't': 
-				str = (std::string)optarg;
-				t.tweet(str); return; break;
-			case 'u':
-				t.usage(); return; break;
-			case 'l':
-				str = (std::string)optarg;
-				bot.loop(str); return; break;
-			case 'r': 
-				bot.record(); return; break;
-			case 'c':
-				bot.clean(); return; break;
-		}
-	} 
+void Twitter::tweet(std::string & tweet,std::string & idResp)
+{ //-------------------------------- tweet
+    if(tweet.length() > 140)
+    {
+        std::cout << "Error: Tweet is "
+                  << tweet.length() << " characters." << std::endl;
+        return;
+    }
+    std::cout << "Tweeted: " << tweet << std::endl;
+    m_acct.statusUpdate(tweet,idResp);
+}
+void Twitter::retwitteById(QString id)
+{
+    m_acct.retweetById(id.toStdString());
 }
 
+QString Twitter::getReceivedMessage(std::string & str)
+{
+    if(this->m_acct.directMessageGet(str))
+    {
+        std::string result;
+        this->m_acct.getLastWebResponse(result);
+        return QString::fromStdString(result);
+    }
+    return QString();
+}
+QString Twitter::search(QString str)
+{
+
+    std::string cppstr = str.toStdString();
+    if(this->m_acct.search(cppstr))
+    {
+        std::string result;
+        this->m_acct.getLastWebResponse(result);
+        return QString::fromStdString(result);
+    }
+    return QString();
+}
