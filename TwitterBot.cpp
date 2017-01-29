@@ -67,7 +67,11 @@ void TwitterBot::retwitte()
                 m_lastReceivedTwitJDR = idStr;
                 if(m_init2)
                 {
-                    m_twitterManager.retwitteById(idStr);
+                    QString userId = rootObj["user"].toObject().value("id").toString();
+                    if(userId!="809467286599761920")
+                    {
+                        m_twitterManager.retwitteById(idStr);
+                    }
                 }
             }
         }
