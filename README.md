@@ -10,4 +10,5 @@ Moreover, all french messages with #jdr inside are retwitted.
 # License
 GNU GPLv2
 
-
+# Documentation
+http://rolisteam.org/twitterbot
