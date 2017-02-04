@@ -55,14 +55,16 @@ public:
     TwitterBot(Twitter & t_in);
 
     void retwitte();
+
 public slots:
-    void searchTwitJDR();
+    void quit();
 protected:
     QString diceToText(ExportedDiceResult &dice, bool highlight);
     bool rollCmd(CommandDice* cmd);
     void saveSettings();
     void readSettings();
 private slots:
+    void searchTwitJDR();
     void readTwit();
     void searchTwit();
     void filterRollMsg();

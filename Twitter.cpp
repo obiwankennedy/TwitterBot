@@ -88,7 +88,8 @@ Twitter::Twitter(
             memset( tmpBuf, 0, 1024 );
             qDebug() << "Please visit this link in web browser and authorize this application:\n" << m_urlString.c_str();
             qDebug() << "Enter the PIN provided by twitter: ";
-            gets( tmpBuf );
+            std::string name_surname;
+            std::getline( std::cin, name_surname );
             tmpStr = tmpBuf;
             this->m_acct.getOAuth().setOAuthPin( tmpStr );
         }

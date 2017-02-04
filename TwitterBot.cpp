@@ -3,6 +3,7 @@
 #include <QString>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonValue>
 #include <QJsonArray>
 #include <QSettings>
 
@@ -10,7 +11,7 @@
 
 //------------------------------------------------------------------ ctor
 TwitterBot::TwitterBot(Twitter & t_in)
-        : m_twitterManager(t_in),m_timer(new QTimer(this)),m_lastReceivedTwit("0"),m_init(false)
+        : m_twitterManager(t_in),m_timer(new QTimer(this)),m_lastReceivedTwit("0"),m_init(false),m_init2(false)
 {
     m_diceparser = new DiceParser();
     m_timer->setInterval(5000);
@@ -68,6 +69,7 @@ void TwitterBot::retwitte()
                 if(m_init2)
                 {
                     QString userId = rootObj["user"].toObject().value("id").toString();
+                    qDebug() << "retwitte" << rootObj["text"].toString();
                     if(userId!="809467286599761920")
                     {
                         m_twitterManager.retwitteById(idStr);
@@ -78,6 +80,11 @@ void TwitterBot::retwitte()
 
     }
     m_init2 = true;
+}
+#include <QCoreApplication>
+void TwitterBot::quit()
+{
+    qApp->exit(0);
 }
 void TwitterBot::filterRollMsg()
 {
