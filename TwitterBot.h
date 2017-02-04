@@ -53,6 +53,7 @@ class TwitterBot : public QObject
     Q_OBJECT
 public:
     TwitterBot(Twitter & t_in);
+    virtual ~TwitterBot();
 
     void retwitte();
 
