@@ -21,6 +21,11 @@ TwitterBot::TwitterBot(Twitter & t_in)
     readSettings();
 }
 
+TwitterBot::~TwitterBot()
+{
+    delete m_diceparser;
+}
+
 void TwitterBot::readTwit()
 {
     qDebug() << "readTwit" << m_result;
