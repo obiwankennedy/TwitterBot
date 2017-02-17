@@ -24,3 +24,5 @@ DEPENDPATH += $$PWD/libtwitcurl
 
 include($$PWD/libtwitcurl/libtwitcurl/libtwitcurl.pri)
 include($$PWD/diceparser/diceparser.pri)
+
+OTHER_FILES += *.xml

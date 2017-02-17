@@ -7,6 +7,10 @@
 #include "credential.h"
 #include "twitterbotadaptor.h"
 
+enum LOG_STATE {DEBUG,INFO,WARNING,CRITICAL,FATAL};
+
+int g_logMini = CRITICAL;
+
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
       QByteArray localMsg = msg.toLocal8Bit();
@@ -28,7 +32,7 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
           fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
           abort();
       }
-  }
+}
 
 
 int main(int argc, char *argv[])
@@ -46,6 +50,8 @@ int main(int argc, char *argv[])
                         accesTokenSecret,
                         s_username,
                         s_password);
+
+    g_logMini = INFO;
 
     TwitterBot bot(t);
     new TwitterBotAdaptor(&bot);

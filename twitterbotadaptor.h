@@ -32,6 +32,9 @@ class TwitterBotAdaptor: public QDBusAbstractAdaptor
     Q_CLASSINFO("D-Bus Interface", "local.TwitterBot")
     Q_CLASSINFO("D-Bus Introspection", ""
 "  <interface name=\"local.TwitterBot\">\n"
+"    <method name=\"sendTwit\">\n"
+"      <arg direction=\"in\" type=\"s\" name=\"msg\"/>\n"
+"    </method>\n"
 "    <method name=\"quit\"/>\n"
 "  </interface>\n"
         "")
@@ -42,6 +45,7 @@ public:
 public: // PROPERTIES
 public Q_SLOTS: // METHODS
     void quit();
+    void sendTwit(const QString &msg);
 Q_SIGNALS: // SIGNALS
 };
 

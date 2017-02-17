@@ -7,6 +7,7 @@
 #include <QJsonArray>
 #include <QSettings>
 #include <QtDebug>
+#include <QCoreApplication>
 
 #define TWITTER_LIMIT 140
 
@@ -99,9 +100,9 @@ void TwitterBot::retwitte()
     }
     m_init2 = true;
 }
-#include <QCoreApplication>
 void TwitterBot::quit()
 {
+    qInfo() << "Application is about to close";
     qApp->exit(0);
 }
 void TwitterBot::filterRollMsg()

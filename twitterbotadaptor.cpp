@@ -39,3 +39,9 @@ void TwitterBotAdaptor::quit()
     QMetaObject::invokeMethod(parent(), "quit");
 }
 
+void TwitterBotAdaptor::sendTwit(const QString &msg)
+{
+    // handle method call local.TwitterBot.sendTwit
+    QMetaObject::invokeMethod(parent(), "sendTwit", Q_ARG(QString, msg));
+}
+
