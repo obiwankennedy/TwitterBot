@@ -6,6 +6,7 @@
 #include <QJsonValue>
 #include <QJsonArray>
 #include <QSettings>
+#include <QtDebug>
 
 #define TWITTER_LIMIT 140
 
@@ -14,11 +15,23 @@ TwitterBot::TwitterBot(Twitter & t_in)
         : m_twitterManager(t_in),m_timer(new QTimer(this)),m_lastReceivedTwit("0"),m_init(false),m_init2(false)
 {
     m_diceparser = new DiceParser();
-    m_timer->setInterval(5000);
+    m_timer->setInterval(1000);
     connect(m_timer,SIGNAL(timeout()),this,SLOT(searchTwit()));
     connect(m_timer,SIGNAL(timeout()),this,SLOT(searchTwitJDR()));
+    connect(m_timer,SIGNAL(timeout()),this,SLOT(checkMustSendRecordedMsg()));
     m_timer->start();
     readSettings();
+
+
+    if(m_messagesToSend.isEmpty())
+    {
+        m_messagesToSend.insertMulti(0,"Lancer les dés sur twitter? facile: commencer vos msg par: #roll\n Suivi d'une commande. Plus d'info: http://rolisteam.org/fr/node/723");
+        m_messagesToSend.insertMulti(0,"Suivez l'actualité du #JDR grâce à @DiceParser, un robot qui vous veut du bien");
+        m_messagesToSend.insertMulti(0,"Je gère les commandes de dés comme dans @Rolisteam");
+        m_messagesToSend.insertMulti(0,"Le blog de mon créateur: http://blog.rolisteam.org/ (Just in case)");
+        m_messagesToSend.insertMulti(0,"Vous connaissez le comble du roliste ? C'est \"se la jouer perso\".");
+        m_messagesToSend.insertMulti(0,"Si vous voulez voir mon code source, c'est ici: https://github.com/obiwankennedy/TwitterBot #Voyeurs");
+    }
 }
 
 TwitterBot::~TwitterBot()
@@ -28,7 +41,7 @@ TwitterBot::~TwitterBot()
 
 void TwitterBot::readTwit()
 {
-    qDebug() << "readTwit" << m_result;
+    qInfo() << "Read Twit:" << m_result;
 }
 void TwitterBot::searchTwit()
 {
@@ -74,7 +87,7 @@ void TwitterBot::retwitte()
                 if(m_init2)
                 {
                     QString userId = rootObj["user"].toObject().value("id").toString();
-                    qDebug() << "retwitte" << rootObj["text"].toString();
+                    qInfo() << "retwit:" << rootObj["text"].toString() << userId;
                     if(userId!="809467286599761920")
                     {
                         m_twitterManager.retwitteById(idStr);
@@ -115,13 +128,13 @@ void TwitterBot::filterRollMsg()
                     val = val.remove(0,5);
                     val = val.trimmed();
                     CommandDice* cmd = new CommandDice();
-                    qDebug() << val;
+                    qInfo() << "Found Command Dice:" << val;
                     m_cmdToRun.append(cmd);
                     cmd->setCmd(val);
                     cmd->setIdMsg(idStr);
                     if(rollCmd(cmd))
                     {
-                        qDebug() << "Roll cmd great!!!!";
+                        qInfo() << "Valid Command" << val;
                         sendTwittAnswer(cmd);
                     }
                     delete cmd;
@@ -220,7 +233,6 @@ QString TwitterBot::diceToText(ExportedDiceResult& dice,bool highlight)
 }
 void TwitterBot::sendTwittAnswer(CommandDice* cmd)
 {
-    qDebug() << "sendAwnser";
     if(!cmd->result().isEmpty())
     {
         QString result = cmd->result();
@@ -233,6 +245,7 @@ void TwitterBot::sendTwittAnswer(CommandDice* cmd)
             adsCppString = ads.toStdString();
             msgIdCppString = cmd->idMsg().toStdString();
             m_twitterManager.tweet(adsCppString,msgIdCppString );
+            qInfo() << "Whole Send Answer by Twit:" << QString::fromStdString(adsCppString);
         }
         else
         {
@@ -245,6 +258,7 @@ void TwitterBot::sendTwittAnswer(CommandDice* cmd)
                       msgIdCppString = cmd->idMsg().toStdString();
                       m_twitterManager.tweet(adsCppString,  msgIdCppString);
                       ads = "";
+                      qInfo() << "Send Answer by Twit split 1: " << QString::fromStdString(adsCppString);
                  }
                  else
                  {
@@ -253,11 +267,68 @@ void TwitterBot::sendTwittAnswer(CommandDice* cmd)
 
                      m_twitterManager.tweet(adsCppString, msgIdCppString );
                      ads = ads.remove(0,TWITTER_LIMIT);
+                     qInfo() << "Send Answer by Twit split 2: " << QString::fromStdString(adsCppString);
                  }
              }
         }
         saveSettings();
     }
+}
+void TwitterBot::sendTwit(QString msg)
+{
+    std::string adsCppString;
+    std::string resp = "";
+    if(msg.size()<TWITTER_LIMIT)
+    {
+        adsCppString = msg.toStdString();
+        m_twitterManager.tweet(adsCppString,resp);
+        qInfo() << "[slot] Send Twit:" << QString::fromStdString(adsCppString);
+    }
+}
+#include <QDateTime>
+#include <random>
+void TwitterBot::checkMustSendRecordedMsg()
+{
+    QDateTime now = QDateTime::currentDateTime();
+    if(m_previous.isValid())
+    {
+        if(now.time().hour()==15 && m_previous.time().hour()==14)
+        {
+            QStringList list = m_messagesToSend.values(0);
+            if(list.isEmpty())
+            {
+                qDebug() << "Error! list empty";
+            }
+            else if(list.size()==1)
+            {
+                QString value = list.first();
+                sendTwit(value);
+                QStringList list2 = m_messagesToSend.values(1);
+                for(QString str : list2)
+                {
+                    m_messagesToSend.insertMulti(0,str);
+                }
+                m_messagesToSend.remove(1);
+            }
+            else
+            {
+                std::random_device rd;
+                std::uniform_int_distribution<int> dist(0, list.size()-1);
+                int randomNumber = dist(rd);
+                QString msg = list.at(randomNumber);
+                list.removeOne(msg);
+                sendTwit(msg);
+                m_messagesToSend.insertMulti(1,msg);
+                m_messagesToSend.remove(0);
+                for(auto str : list)
+                {
+                    m_messagesToSend.insertMulti(0,str);
+                }
+            }
+        }
+    }
+    m_previous = now;
+
 }
 
 QString CommandDice::idMsg() const

@@ -143,16 +143,15 @@ Twitter::Twitter(
     }*/
     //this->acct.getOAuth().setOAuthPin("8461952");
 }
-
+#include <QtDebug>
 void Twitter::tweet(std::string & tweet,std::string & idResp)
 { //-------------------------------- tweet
     if(tweet.length() > 140)
     {
-        std::cout << "Error: Tweet is "
-                  << tweet.length() << " characters." << std::endl;
+        qCritical() << "Error: Tweet is " << tweet.length() << " characters.";
         return;
     }
-    std::cout << "Tweeted: " << tweet << std::endl;
+    //std::cout << "Tweeted: " << tweet << std::endl;
     m_acct.statusUpdate(tweet,idResp);
 }
 void Twitter::retwitteById(QString id)

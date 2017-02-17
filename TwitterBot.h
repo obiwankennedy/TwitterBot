@@ -19,11 +19,12 @@
 #include <QObject>
 #include <QTimer>
 #include <QEvent>
+#include <QDateTime>
 
 #include "diceparser.h"
 
 //-----------------------------------------------------------------------------------
-//									DECLARATIONS
+//									CommandDice
 //-----------------------------------------------------------------------------------
 class CommandDice
 {
@@ -48,6 +49,9 @@ private:
     QString m_result;
 };
 
+//-----------------------------------------------------------------------------------
+//									TwitterBot
+//-----------------------------------------------------------------------------------
 class TwitterBot : public QObject
 {
     Q_OBJECT
@@ -58,7 +62,10 @@ public:
     void retwitte();
 
 public slots:
+    void sendTwit(QString msg);
     void quit();
+
+
 protected:
     QString diceToText(ExportedDiceResult &dice, bool highlight);
     bool rollCmd(CommandDice* cmd);
@@ -70,6 +77,7 @@ private slots:
     void searchTwit();
     void filterRollMsg();
     void sendTwittAnswer(CommandDice* cmd);
+    void checkMustSendRecordedMsg();
 
 private:
 	//Twitter
@@ -86,5 +94,9 @@ private:
     QList<CommandDice*> m_results;
     bool m_init;
     bool m_init2;
+
+    QHash<int,QString> m_messagesToSend;
+
+    QDateTime m_previous;
 };
 #endif
