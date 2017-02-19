@@ -120,6 +120,7 @@ void TwitterBot::filterRollMsg()
             QJsonObject msgObj = msg.toObject();
             qreal id = msgObj["id"].toDouble();
             QString idStr = msgObj["id_str"].toString();
+            QJsonObject user = msgObj["user"].toObject();
             if(idStr>m_lastReceivedTwit)
             {
                 QString val = msgObj["text"].toString();
@@ -133,6 +134,7 @@ void TwitterBot::filterRollMsg()
                     m_cmdToRun.append(cmd);
                     cmd->setCmd(val);
                     cmd->setIdMsg(idStr);
+                    cmd->setUser(user["screen_name"].toString());
                     if(rollCmd(cmd))
                     {
                         qInfo() << "Valid Command" << val;
@@ -237,8 +239,16 @@ void TwitterBot::sendTwittAnswer(CommandDice* cmd)
     if(!cmd->result().isEmpty())
     {
         QString result = cmd->result();
-        QString ads("%1, powered by @Rolisteam");
-        ads=ads.arg(result);
+        QString ads;
+        if(!cmd->user().isEmpty())
+        {
+            ads = "@%2 %1, powered by @Rolisteam";
+        }
+        else
+        {
+            ads = "%2%1, powered by @Rolisteam";
+        }
+        ads=ads.arg(result).arg(cmd->user());
         std::string adsCppString;
         std::string msgIdCppString;
         if(ads.size()<TWITTER_LIMIT)
@@ -246,7 +256,7 @@ void TwitterBot::sendTwittAnswer(CommandDice* cmd)
             adsCppString = ads.toStdString();
             msgIdCppString = cmd->idMsg().toStdString();
             m_twitterManager.tweet(adsCppString,msgIdCppString );
-            qInfo() << "Whole Send Answer by Twit:" << QString::fromStdString(adsCppString);
+            qInfo() << "Whole Send Answer by Twit:" << QString::fromStdString(adsCppString) << "to:" << cmd->user();
         }
         else
         {
