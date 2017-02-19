@@ -1,5 +1,5 @@
 #include <QCoreApplication>
-
+#include <QDateTime>
 #include <QDebug>
 
 #include "Twitter.h"
@@ -14,22 +14,23 @@ int g_logMini = CRITICAL;
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
       QByteArray localMsg = msg.toLocal8Bit();
+      QString time = QDateTime::currentDateTime().toString("dd/mm/yyy - hh:mm:ss");
       switch (type)
       {
       case QtDebugMsg:
-          fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          fprintf(stderr, "Debug: [%s] - %s (%s:%u, %s)\n",time.constData(), localMsg.constData(), context.file, context.line, context.function);
           break;
       case QtInfoMsg:
-          fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          fprintf(stderr, "Info: [%s] - %s (%s:%u, %s)\n",time.constData(), localMsg.constData(), context.file, context.line, context.function);
           break;
       case QtWarningMsg:
-          fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          fprintf(stderr, "Warning: [%s] - %s (%s:%u, %s)\n",time.constData(), localMsg.constData(), context.file, context.line, context.function);
           break;
       case QtCriticalMsg:
-          fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          fprintf(stderr, "Critical: [%s] - %s (%s:%u, %s)\n",time.constData(), localMsg.constData(), context.file, context.line, context.function);
           break;
       case QtFatalMsg:
-          fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+          fprintf(stderr, "Fatal: [%s] - %s (%s:%u, %s)\n",time.constData(), localMsg.constData(), context.file, context.line, context.function);
           abort();
       }
 }
