@@ -16,7 +16,10 @@ TwitterBot::TwitterBot(Twitter & t_in)
         : m_twitterManager(t_in),m_timer(new QTimer(this)),m_lastReceivedTwit("0"),m_init(false),m_init2(false)
 {
     m_diceparser = new DiceParser();
-    m_timer->setInterval(1000);
+
+    m_diceparser->insertAlias(new DiceAlias("d[-1-1]","DF",true,true),0);
+
+    m_timer->setInterval(2000*60);
     connect(m_timer,SIGNAL(timeout()),this,SLOT(searchTwit()));
     connect(m_timer,SIGNAL(timeout()),this,SLOT(searchTwitJDR()));
     connect(m_timer,SIGNAL(timeout()),this,SLOT(checkMustSendRecordedMsg()));
@@ -30,7 +33,9 @@ TwitterBot::TwitterBot(Twitter & t_in)
         m_messagesToSend.insertMulti(0,"Suivez l'actualité du #JDR grâce à @DiceParser, un robot qui vous veut du bien");
         m_messagesToSend.insertMulti(0,"Je gère les commandes de dés comme dans @Rolisteam");
         m_messagesToSend.insertMulti(0,"Le blog de mon créateur: http://blog.rolisteam.org/ (Just in case)");
-        m_messagesToSend.insertMulti(0,"Vous connaissez le comble du roliste ? C'est \"se la jouer perso\".");
+        m_messagesToSend.insertMulti(0,"@Rolisteam en action : https://www.youtube.com/watch?v=FdURVRDyu-Y&list=PLBSt0cCTFfS5fi3v1LtB9sfeA8opY-Ge1 ");
+        m_messagesToSend.insertMulti(0,"Une fiche #L5R : Créer une copie https://docs.google.com/spreadsheets/d/1SjabaCDLnElG-dQt8zSdCD25hxT7lgN7MFsAiRubTyc/edit?usp=sharing ");
+        m_messagesToSend.insertMulti(0,"Une fiche #Cops : Créer une copie https://docs.google.com/spreadsheets/d/12uTg0GtqPFKwQi8u5Lcn0cseelDj1HTEME60gorPR6A/edit?usp=sharing ");
         m_messagesToSend.insertMulti(0,"Si vous voulez voir mon code source, c'est ici: https://github.com/obiwankennedy/TwitterBot #Voyeurs");
     }
 }
@@ -62,6 +67,7 @@ void TwitterBot::searchTwitJDR()
     QString result2 = m_twitterManager.search("%23JDR&lang=fr");
     if(!result2.isEmpty())
     {
+        qDebug() << "########" << m_resultJdr.contains(result2) ;
         if(!m_resultJdr.contains(result2))
         {
             m_resultJdr << result2;
@@ -71,9 +77,12 @@ void TwitterBot::searchTwitJDR()
 }
 void TwitterBot::retwitte()
 {
+
+    qDebug() << m_resultJdr.size();
     for(auto jsonFile : m_resultJdr)
     {
         QJsonDocument doc = QJsonDocument::fromJson(jsonFile.toLatin1());
+       // qDebug() << doc.toJson();
         QJsonObject rootObj = doc.object();
         QJsonArray arrayStatues = rootObj["statuses"].toArray();
 
@@ -82,6 +91,7 @@ void TwitterBot::retwitte()
             QJsonValue msg = arrayStatues[i];
             QJsonObject msgObj = msg.toObject();
             QString idStr = msgObj["id_str"].toString();
+            //qDebug() << idStr << m_lastReceivedTwitJDR << "i=" <<i;
             if(idStr>m_lastReceivedTwitJDR)
             {
                 m_lastReceivedTwitJDR = idStr;
@@ -89,15 +99,19 @@ void TwitterBot::retwitte()
                 {
                     QString userId = rootObj["user"].toObject().value("id").toString();
                     qInfo() << "retwit:" << rootObj["text"].toString() << userId;
-                    if(userId!="809467286599761920")
+                    if(!msgObj["text"].toString().contains("roll20"))
                     {
-                        m_twitterManager.retwitteById(idStr);
+                        if(userId!="809467286599761920")
+                        {
+                            m_twitterManager.retwitteById(idStr);
+                        }
                     }
                 }
             }
         }
 
     }
+    m_resultJdr.clear();
     m_init2 = true;
 }
 void TwitterBot::quit()

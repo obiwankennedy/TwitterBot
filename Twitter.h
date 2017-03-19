@@ -27,6 +27,7 @@ public:
     QString getReceivedMessage(std::string & sinceId);
     QString search(QString str);
     void retwitteById(QString id);
+    QString getLimitRate();
 private:
 	//my account
     twitCurl m_acct; //updated in ctor

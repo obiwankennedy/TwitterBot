@@ -159,6 +159,17 @@ void Twitter::retwitteById(QString id)
     m_acct.retweetById(id.toStdString());
 }
 
+QString Twitter::getLimitRate()
+{
+    if(m_acct.accountRateLimitGet())
+    {
+        std::string result;
+        m_acct.getLastWebResponse(result);
+        return QString::fromStdString(result);
+    }
+    return QString();
+}
+
 QString Twitter::getReceivedMessage(std::string & str)
 {
     if(this->m_acct.directMessageGet(str))
