@@ -99,7 +99,7 @@ void TwitterBot::retwitte()
                 {
                     QString userId = rootObj["user"].toObject().value("id").toString();
                     qInfo() << "retwit:" << rootObj["text"].toString() << userId;
-                    if(!msgObj["text"].toString().contains("roll20"))
+                    if(!msgObj["text"].toString().contains("roll20",Qt::CaseInsensitive))
                     {
                         if(userId!="809467286599761920")
                         {
