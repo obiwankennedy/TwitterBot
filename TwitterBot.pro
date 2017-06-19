@@ -4,10 +4,12 @@ CONFIG += c++11
 QT += dbus
 
 template = app
-SOURCES += main.cpp Twitter.cpp TwitterBot.cpp json.cpp twitterbotadaptor.cpp
+SOURCES += main.cpp Twitter.cpp TwitterBot.cpp json.cpp
+#twitterbotadaptor.cpp
 
 
-HEADERS += Twitter.h TwitterBot.h json.h credential.h twitterbotadaptor.h
+HEADERS += Twitter.h TwitterBot.h json.h credential.h
+#twitterbotadaptor.h
 
 TARGET = twitterBot
 #-L/home/renaud/application/mine/TwitterFollowBot/libtwitcurl/libtwitcurl.a \
@@ -15,10 +17,14 @@ TARGET = twitterBot
 
 unix:!macx: LIBS += /usr/lib/x86_64-linux-gnu/libcurl.so
 
+
+
 INCLUDEPATH += $$PWD/libtwitcurl \
                 $$PWD/libtwitcurl/libtwitcurl/include \
 
+DBUS_ADAPTORS += org.rolisteam.twitterbot.xml
 
+#DBUS_INTERFACES += org.rolisteam.twitterbot.xml
 
 DEPENDPATH += $$PWD/libtwitcurl
 

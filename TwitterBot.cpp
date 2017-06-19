@@ -23,21 +23,43 @@ TwitterBot::TwitterBot(Twitter & t_in)
     connect(m_timer,SIGNAL(timeout()),this,SLOT(searchTwit()));
     connect(m_timer,SIGNAL(timeout()),this,SLOT(searchTwitJDR()));
     connect(m_timer,SIGNAL(timeout()),this,SLOT(checkMustSendRecordedMsg()));
+    connect(m_timer,SIGNAL(timeout()),this,SLOT(checkPrivateMessage()));
     m_timer->start();
     readSettings();
 
 
     if(m_messagesToSend.isEmpty())
     {
-        m_messagesToSend.insertMulti(0,"Lancer les dés sur twitter? facile: commencer vos msg par: #roll\n Suivi d'une commande. Plus d'info: http://rolisteam.org/fr/node/723");
+        m_messagesToSend.insertMulti(0,"Lancer les dés sur twitter? facile: commencer vos msg par: #roll\n Suivi d'une commande. Plus d'info: http://www.rolisteam.org/fr/twitter.html");
         m_messagesToSend.insertMulti(0,"Suivez l'actualité du #JDR grâce à @DiceParser, un robot qui vous veut du bien");
+        m_messagesToSend.insertMulti(0,"Lancer les dés par MP. Écrivez moi avce une commande de dés: !2d6 ou #roll 2d6. Plus d'info: http://www.rolisteam.org/fr/twitter.html");
         m_messagesToSend.insertMulti(0,"Je gère les commandes de dés comme dans @Rolisteam");
         m_messagesToSend.insertMulti(0,"Le blog de mon créateur: http://blog.rolisteam.org/ (Just in case)");
+        m_messagesToSend.insertMulti(0,"Vous pouvez retrouver un clone de moi sur Discord: http://www.rolisteam.org/fr/discord.html");
         m_messagesToSend.insertMulti(0,"@Rolisteam en action : https://www.youtube.com/watch?v=FdURVRDyu-Y&list=PLBSt0cCTFfS5fi3v1LtB9sfeA8opY-Ge1 ");
         m_messagesToSend.insertMulti(0,"Une fiche #L5R : Créer une copie https://docs.google.com/spreadsheets/d/1SjabaCDLnElG-dQt8zSdCD25hxT7lgN7MFsAiRubTyc/edit?usp=sharing ");
         m_messagesToSend.insertMulti(0,"Une fiche #Cops : Créer une copie https://docs.google.com/spreadsheets/d/12uTg0GtqPFKwQi8u5Lcn0cseelDj1HTEME60gorPR6A/edit?usp=sharing ");
         m_messagesToSend.insertMulti(0,"Si vous voulez voir mon code source, c'est ici: https://github.com/obiwankennedy/TwitterBot #Voyeurs");
+        m_messagesToSend.insertMulti(0,"Vous pouvez faire un don pour Rolisteam et pour moi: https://liberapay.com/rolisteam/donate #CF");
     }
+
+qDebug() << m_forbiddenUsers;
+    {
+        m_forbiddenUsers.removeAll("YanickToutain");
+        m_forbiddenUsers.removeAll("infosportplus");
+        m_forbiddenUsers.removeAll("Julie_Amadis");
+        m_forbiddenUsers.removeAll("Pamela77681");
+         m_forbiddenUsers.removeAll("Standup_Cath");
+
+        m_forbiddenUsers.append("YanickToutain");
+        m_forbiddenUsers.append("infosportplus");
+        m_forbiddenUsers.append("Julie_Amadis");
+        m_forbiddenUsers.append("Pamela77681");
+        m_forbiddenUsers.append("Standup_Cath");
+
+
+    }
+qDebug() << m_forbiddenUsers;
 }
 
 TwitterBot::~TwitterBot()
@@ -67,7 +89,7 @@ void TwitterBot::searchTwitJDR()
     QString result2 = m_twitterManager.search("%23JDR&lang=fr");
     if(!result2.isEmpty())
     {
-        qDebug() << "########" << m_resultJdr.contains(result2) ;
+       // qDebug() << "########" << m_resultJdr.contains(result2) ;
         if(!m_resultJdr.contains(result2))
         {
             m_resultJdr << result2;
@@ -78,7 +100,7 @@ void TwitterBot::searchTwitJDR()
 void TwitterBot::retwitte()
 {
 
-    qDebug() << m_resultJdr.size();
+   // qDebug() << m_resultJdr.size();
     for(auto jsonFile : m_resultJdr)
     {
         QJsonDocument doc = QJsonDocument::fromJson(jsonFile.toLatin1());
@@ -97,13 +119,21 @@ void TwitterBot::retwitte()
                 m_lastReceivedTwitJDR = idStr;
                 if(m_init2)
                 {
-                    QString userId = rootObj["user"].toObject().value("id").toString();
-                    qInfo() << "retwit:" << rootObj["text"].toString() << userId;
-                    if(!msgObj["text"].toString().contains("roll20",Qt::CaseInsensitive))
+                    QJsonObject user = msgObj["user"].toObject();
+                    QString userId = user["id"].toString();
+
+
+                    QString screenName = user["screen_name"].toString();
+
+                    if(isAllowed(screenName))
                     {
-                        if(userId!="809467286599761920")
+                        // qInfo() << "retwit:" << rootObj["text"].toString() << userId;
+                        if(!msgObj["text"].toString().contains("roll20",Qt::CaseInsensitive))
                         {
-                            m_twitterManager.retwitteById(idStr);
+                            if(userId!="809467286599761920")
+                            {
+                                m_twitterManager.retwitteById(idStr);
+                            }
                         }
                     }
                 }
@@ -119,6 +149,16 @@ void TwitterBot::quit()
     qInfo() << "Application is about to close";
     qApp->exit(0);
 }
+bool TwitterBot::isAllowed(QString str)
+{
+    qDebug()  << str << m_forbiddenUsers << m_forbiddenUsers.contains(str);
+    if(m_forbiddenUsers.contains(str))
+    {
+        return false;
+    }
+    return true;
+}
+
 void TwitterBot::filterRollMsg()
 {
     for(auto jsonFile : m_result)
@@ -144,14 +184,14 @@ void TwitterBot::filterRollMsg()
                     val = val.remove(0,5);
                     val = val.trimmed();
                     CommandDice* cmd = new CommandDice();
-                    qInfo() << "Found Command Dice:" << val;
+                   // qInfo() << "Found Command Dice:" << val;
                     m_cmdToRun.append(cmd);
                     cmd->setCmd(val);
                     cmd->setIdMsg(idStr);
                     cmd->setUser(user["screen_name"].toString());
                     if(rollCmd(cmd))
                     {
-                        qInfo() << "Valid Command" << val;
+                       // qInfo() << "Valid Command" << val;
                         sendTwittAnswer(cmd);
                     }
                     delete cmd;
@@ -169,7 +209,7 @@ bool TwitterBot::rollCmd(CommandDice* cmd)
         m_diceparser->Start();
         if(!m_diceparser->getErrorMap().isEmpty())
         {
-            qDebug() << "Error" << m_diceparser->humanReadableError()<< "\n";
+           // qDebug() << "Error" << m_diceparser->humanReadableError()<< "\n";
             return false;
         }
 
@@ -270,7 +310,7 @@ void TwitterBot::sendTwittAnswer(CommandDice* cmd)
             adsCppString = ads.toStdString();
             msgIdCppString = cmd->idMsg().toStdString();
             m_twitterManager.tweet(adsCppString,msgIdCppString );
-            qInfo() << "Whole Send Answer by Twit:" << QString::fromStdString(adsCppString) << "to:" << cmd->user();
+         //   qInfo() << "Whole Send Answer by Twit:" << QString::fromStdString(adsCppString) << "to:" << cmd->user();
         }
         else
         {
@@ -283,7 +323,7 @@ void TwitterBot::sendTwittAnswer(CommandDice* cmd)
                       msgIdCppString = cmd->idMsg().toStdString();
                       m_twitterManager.tweet(adsCppString,  msgIdCppString);
                       ads = "";
-                      qInfo() << "Send Answer by Twit split 1: " << QString::fromStdString(adsCppString);
+                      //qInfo() << "Send Answer by Twit split 1: " << QString::fromStdString(adsCppString);
                  }
                  else
                  {
@@ -292,7 +332,7 @@ void TwitterBot::sendTwittAnswer(CommandDice* cmd)
 
                      m_twitterManager.tweet(adsCppString, msgIdCppString );
                      ads = ads.remove(0,TWITTER_LIMIT);
-                     qInfo() << "Send Answer by Twit split 2: " << QString::fromStdString(adsCppString);
+                   //  qInfo() << "Send Answer by Twit split 2: " << QString::fromStdString(adsCppString);
                  }
              }
         }
@@ -307,8 +347,13 @@ void TwitterBot::sendTwit(QString msg)
     {
         adsCppString = msg.toStdString();
         m_twitterManager.tweet(adsCppString,resp);
-        qInfo() << "[slot] Send Twit:" << QString::fromStdString(adsCppString);
+        //qInfo() << "[slot] Send Twit:" << QString::fromStdString(adsCppString);
     }
+}
+
+void TwitterBot::addForbiddenPerson(QString str)
+{
+    m_forbiddenUsers.append(str);
 }
 #include <QDateTime>
 #include <random>
@@ -322,7 +367,7 @@ void TwitterBot::checkMustSendRecordedMsg()
             QStringList list = m_messagesToSend.values(0);
             if(list.isEmpty())
             {
-                qDebug() << "Error! list empty";
+               // qDebug() << "Error! list empty";
             }
             else if(list.size()==1)
             {
@@ -353,6 +398,53 @@ void TwitterBot::checkMustSendRecordedMsg()
         }
     }
     m_previous = now;
+
+}
+#include <QJsonValueRef>
+void TwitterBot::checkPrivateMessage()
+{
+    qDebug() << "\n\n\n\n##################################";
+    std::string lastId = m_lastReceivedMsg.toStdString();
+    QString result = m_twitterManager.getReceivedMessage(lastId);
+    QJsonDocument doc = QJsonDocument::fromJson(result.toLatin1());
+
+    QJsonArray rootObj = doc.array();
+
+    //qDebug() << arrayStatues;
+
+    for(auto item : rootObj)
+    {
+        auto jsonOb = item.toObject();
+        QString text = jsonOb["text"].toString();
+        QString senderId = jsonOb["sender_id_str"].toString();
+
+
+        QString idPost = jsonOb["id_str"].toString();
+        if(idPost>m_lastReceivedMsg)
+        {
+            m_lastReceivedMsg = idPost;
+        }
+        if((text.startsWith("#roll"))||(text.startsWith("!")))
+        {
+            if(text.startsWith("#roll"))
+                text.remove(0,5);
+            else
+                text.remove(0,1);
+            text = text.trimmed();
+            CommandDice dice;
+            dice.setCmd(text);
+            dice.setUser(senderId);
+            if(rollCmd(&dice))
+            {
+                m_twitterManager.sendPrivateMessage(senderId,dice.result());
+            }
+
+            qDebug() << text;
+
+        }
+    }
+saveSettings();
+    qDebug() << "##################################\n\n\n\n\n\n\n";
 
 }
 
@@ -400,10 +492,15 @@ void TwitterBot::saveSettings()
     QSettings setting("rolisteam","DiceParserBot");
 
     setting.setValue("lastReceivedId",m_lastReceivedTwit);
+    setting.setValue("forbiddenUser",m_forbiddenUsers);
+    setting.setValue("lastReceivedMsg",m_lastReceivedMsg);
 }
 void TwitterBot::readSettings()
 {
     QSettings setting("rolisteam","DiceParserBot");
 
     m_lastReceivedTwit = setting.value("lastReceivedId",m_lastReceivedTwit).toString();
+    m_lastReceivedMsg = setting.value("lastReceivedMsg",m_lastReceivedMsg).toString();
+
+    m_forbiddenUsers = setting.value("forbiddenUser",m_forbiddenUsers).toStringList();
 }
