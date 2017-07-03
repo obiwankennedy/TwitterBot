@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
                         accesToken,
                         accesTokenSecret,
                         s_username,
-                        s_password);
+                        s_password,false);
 
     g_logMini = INFO;
 

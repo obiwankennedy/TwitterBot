@@ -32,7 +32,8 @@ human sheep accounts
 
 Twitter::Twitter(
         std::string CK, std::string CS,
-        std::string AT, std::string ATS,std::string userName,std::string passwd)
+        std::string AT, std::string ATS,std::string userName,std::string passwd,bool debug)
+    : m_debugMode(debug)
 {
     char tmpBuf[1024];
     std::string replyMsg;
@@ -152,11 +153,24 @@ void Twitter::tweet(std::string & tweet,std::string & idResp)
         return;
     }
     //std::cout << "Tweeted: " << tweet << std::endl;
-    m_acct.statusUpdate(tweet,idResp);
+    if(!m_debugMode)
+        m_acct.statusUpdate(tweet,idResp);
 }
 void Twitter::retwitteById(QString id)
 {
-    m_acct.retweetById(id.toStdString());
+    if(!m_debugMode)
+        m_acct.retweetById(id.toStdString());
+}
+
+QString Twitter::getLimitRate()
+{
+    if(m_acct.accountRateLimitGet())
+    {
+        std::string result;
+        m_acct.getLastWebResponse(result);
+        return QString::fromStdString(result);
+    }
+    return QString();
 }
 
 QString Twitter::getReceivedMessage(std::string & str)
@@ -169,6 +183,15 @@ QString Twitter::getReceivedMessage(std::string & str)
     }
     return QString();
 }
+void Twitter::sendPrivateMessage(QString id, QString msg)
+{
+   std::string idStr = id.toStdString();
+   std::string msgStr = msg.toStdString();
+
+   m_acct.directMessageSend(idStr,msgStr,true);
+
+}
+
 QString Twitter::search(QString str)
 {
 

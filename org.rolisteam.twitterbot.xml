@@ -4,6 +4,9 @@
     <method name="sendTwit">
       <arg name="msg" type="s" direction="in"/>
     </method>
+    <method name="addForbiddenPerson">
+      <arg name="str" type="s" direction="in"/>
+    </method>
     <method name="quit">
     </method>
   </interface>

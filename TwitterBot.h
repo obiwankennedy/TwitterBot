@@ -63,6 +63,7 @@ public:
 
 public slots:
     void sendTwit(QString msg);
+    void addForbiddenPerson(QString str);
     void quit();
 
 
@@ -78,6 +79,11 @@ private slots:
     void filterRollMsg();
     void sendTwittAnswer(CommandDice* cmd);
     void checkMustSendRecordedMsg();
+    void checkPrivateMessage();
+
+
+private:
+    bool isAllowed(QString str);
 
 private:
 	//Twitter
@@ -85,10 +91,12 @@ private:
     QTimer* m_timer;
     QString m_lastReceivedTwit;
     QString m_lastReceivedTwitJDR;
+    QString m_lastReceivedMsg;
     qreal m_lastAnsweredTwit;
 
     QStringList m_result;
     QStringList m_resultJdr;
+    QStringList m_forbiddenUsers;
     DiceParser* m_diceparser;
     QList<CommandDice*> m_cmdToRun;
     QList<CommandDice*> m_results;

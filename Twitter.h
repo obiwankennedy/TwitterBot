@@ -21,16 +21,19 @@ struct Account
 class Twitter
 {
 public:
-    Twitter(std::string CK, std::string CS, std::string AT, std::string ATS,std::string userName,std::string passwd);
+    Twitter(std::string CK, std::string CS, std::string AT, std::string ATS,std::string userName,std::string passwd, bool debug = false);
     void tweet(std::string & tweet,std::string & idreply); //sends a tweet
 
     QString getReceivedMessage(std::string & sinceId);
+    void sendPrivateMessage(QString id, QString msg);
     QString search(QString str);
     void retwitteById(QString id);
+    QString getLimitRate();
 private:
 	//my account
     twitCurl m_acct; //updated in ctor
     std::string m_urlString;
+    bool m_debugMode;
 };
 
 
